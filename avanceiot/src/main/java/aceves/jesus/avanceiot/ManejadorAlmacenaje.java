@@ -5,10 +5,12 @@ import org.bson.Document;
 import com.mongodb.BasicDBObject;
 import com.mongodb.DBCollection;
 import com.mongodb.DBCursor;
+import com.mongodb.DBObject;
 import com.mongodb.MongoClient;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoCursor;
 import com.mongodb.client.MongoDatabase;
+import static com.mongodb.client.model.Filters.eq;
 
 /**
  * ManejadorAlmacenaje.java
@@ -29,7 +31,7 @@ public class ManejadorAlmacenaje {
 		
 		System.out.println("Se intenta insertar lectura en BD");
 		
-		Document document = new Document("id_sensor", lectura.getIdSensor())
+		Document document = new Document("id_sensor", lectura.getIdBasurero())
 				.append("fechahora", lectura.getFechahora())
 				.append("carga", lectura.getCarga())
 				.append("altura", lectura.getAltura());
@@ -44,8 +46,7 @@ public class ManejadorAlmacenaje {
 		
 		System.out.println("Se intenta insertar basurero en BD");
 		
-		Document document = new Document("id_sensor", basurero.getIdBasurero())
-				.append("fechahora", basurero.getFechahora())
+		Document document = new Document("id_basurero", basurero.getIdBasurero())
 				.append("altura_max", basurero.getAlturaMax());
 		
 		collection.insertOne(document);
@@ -55,7 +56,18 @@ public class ManejadorAlmacenaje {
 	
 	public Basurero obtenerBasurero(int id) {
 		MongoCollection<Document> collection = database.getCollection("basureros");
-		return null;
+		Document document = collection.find(eq("id_basurero", id)).first();
+		
+		if (document == null) {
+			return null;
+		} else {
+			int idBasurero = (Integer) document.get("id_basurero");
+			Double alturaMax = (Double) document.get("altura_max");
+			Basurero basurero = new Basurero(idBasurero, alturaMax);
+			return basurero;
+		}
 	}
+	
+	
 	
 }

@@ -30,8 +30,8 @@ public class SimuladorBasurero {
 			
 			while (bateria > 0) {
 				MqttMessage message = new MqttMessage();
-				double min = 35;
-				double max = 40;
+				double min = 1;
+				double max = 100;
 				double altura = min + Math.random() * (max - min);
 				DecimalFormat df = new DecimalFormat("#.00");
 			    String alturaForm = df.format(altura);

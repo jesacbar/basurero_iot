@@ -8,31 +8,31 @@ import java.util.Date;
  */
 
 public class Lectura {
-	private int idSensor;
+	private int idBasurero;
 	private Date fechahora;
 	private int carga;
 	private double altura;
 	
 	public Lectura() {
-		this.idSensor = -1;
+		this.idBasurero = -1;
 		this.fechahora = null;
 		this.carga = -1;
 		this.altura = -1;
 	}
 	
-	public Lectura(int idSensor, Date fechahora, int carga, double altura) {
-		this.idSensor = idSensor;
+	public Lectura(int idBasurero, Date fechahora, int carga, double altura) {
+		this.idBasurero = idBasurero;
 		this.fechahora = fechahora;
 		this.carga = carga;
 		this.altura = altura;
 	}
 
-	public int getIdSensor() {
-		return idSensor;
+	public int getIdBasurero() {
+		return idBasurero;
 	}
 
-	public void setIdSensor(int idSensor) {
-		this.idSensor = idSensor;
+	public void setIdSensor(int idBasurero) {
+		this.idBasurero = idBasurero;
 	}
 
 	public Date getFechahora() {
@@ -68,7 +68,7 @@ public class Lectura {
 		result = prime * result + (int) (temp ^ (temp >>> 32));
 		result = prime * result + carga;
 		result = prime * result + ((fechahora == null) ? 0 : fechahora.hashCode());
-		result = prime * result + idSensor;
+		result = prime * result + idBasurero;
 		return result;
 	}
 
@@ -90,14 +90,14 @@ public class Lectura {
 				return false;
 		} else if (!fechahora.equals(other.fechahora))
 			return false;
-		if (idSensor != other.idSensor)
+		if (idBasurero != other.idBasurero)
 			return false;
 		return true;
 	}
 
 	@Override
 	public String toString() {
-		return "Lectura [idSensor=" + idSensor + ", fechahora=" + fechahora + ", carga=" + carga + ", altura=" + altura
+		return "Lectura [idSensor=" + idBasurero + ", fechahora=" + fechahora + ", carga=" + carga + ", altura=" + altura
 				+ "]";
 	}
 	

@@ -5,6 +5,7 @@ import java.util.Date;
 /**
  * Lectura.java
  * Autores: Karla Castro, María Germán, Jesús Aceves
+ * Representa una lectura hecha por un sensor de altura dentro de un basurero para medir que tan lleno está.
  */
 
 public class Lectura {

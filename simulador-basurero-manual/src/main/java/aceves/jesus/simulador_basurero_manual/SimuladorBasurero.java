@@ -1,4 +1,4 @@
-package aceves.jesus.simulador_basurero;
+package aceves.jesus.simulador_basurero_manual;
 
 import java.text.DecimalFormat;
 import java.time.Instant;
@@ -22,37 +22,31 @@ public class SimuladorBasurero {
 
 			Scanner sc = new Scanner(System.in);
 			
-			System.out.println("Ingrese el ID del basurero a simular:");
-			int idSensor = sc.nextInt();
-			
-			System.out.println("Ingrese la carga de la batería inicial:");
-			int bateria = sc.nextInt();
-			
-			while (bateria > 0) {
-				MqttMessage message = new MqttMessage();
-				double min = 0;
-				double max = 100;
-				double altura = min + Math.random() * (max - min);
+			while (true) {
+				System.out.println("Ingrese el ID del basurero:");
+				int idSensor = sc.nextInt();
+				
+				System.out.println("Ingrese la carga de la batería:");
+				int bateria = sc.nextInt();
+				
+				System.out.println("Ingrese la altura leída:");
+				double altura = sc.nextDouble();
 				DecimalFormat df = new DecimalFormat("#.00");
 			    String alturaForm = df.format(altura);
+				
 			    Instant i = Instant.now();
+			    
 			    String mensaje = idSensor + "," + i + "," +  bateria + "," + alturaForm;
-				message.setPayload(mensaje.getBytes());
+			    
+			    MqttMessage message = new MqttMessage();
+			    message.setPayload(mensaje.getBytes());
 
 				client.publish("lecturas_basureros", message);
 				
-				System.out.println("< Mensaje enviado >");
-				System.out.println(mensaje);
-				bateria = bateria - 1;
-				try {
-					Thread.sleep(5000);
-				} catch (InterruptedException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				}
+				System.out.println("---------------LECTURA MANDADA---------------");
+				
 			}
 			
-			client.disconnect();
 		} catch (MqttException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();

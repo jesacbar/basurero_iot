@@ -46,6 +46,9 @@ public class Calidad implements MqttCallback{
 				System.out.println("< Se registraron los basureros de prueba >");
 			}			
 			
+			ManejadorNotificaciones notificaciones = new ManejadorNotificaciones();
+			notificaciones.start();
+			
 		} catch (MqttException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -82,6 +85,7 @@ public class Calidad implements MqttCallback{
 						System.out.println("< Se actualizó el estado del llenado del basurero #" + basureroLectura.getIdBasurero() + " a: " + estado + " >");
 					}
 				}
+				basureroLectura.setFechahora(new Date());
 				ma.actualizarBasurero(basureroLectura);
 			}
 		}

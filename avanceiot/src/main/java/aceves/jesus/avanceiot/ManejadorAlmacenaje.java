@@ -3,16 +3,19 @@ package aceves.jesus.avanceiot;
 import org.bson.Document;
 
 import com.mongodb.BasicDBObject;
+import com.mongodb.Cursor;
 import com.mongodb.DBCollection;
 import com.mongodb.DBCursor;
 import com.mongodb.DBObject;
 import com.mongodb.MongoClient;
+import com.mongodb.client.FindIterable;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoCursor;
 import com.mongodb.client.MongoDatabase;
 import static com.mongodb.client.model.Filters.eq;
 
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.Date;
 
 /**
@@ -40,7 +43,7 @@ public class ManejadorAlmacenaje {
 	public void insertarLectura(Lectura lectura) {
 		MongoCollection<Document> collection = database.getCollection("lecturas");
 		
-		Document document = new Document("id_sensor", lectura.getIdBasurero())
+		Document document = new Document("id_basurero", lectura.getIdBasurero())
 				.append("fechahora", lectura.getFechahora())
 				.append("carga", lectura.getCarga())
 				.append("altura", lectura.getAltura());
@@ -111,4 +114,56 @@ public class ManejadorAlmacenaje {
 		}
 	}
 	
+	/**
+	 * Obtiene todos los basureros registrados en la colleción de basureros
+	 * y los regresa en un ArrayList.
+	 * @return ArrayList con todos los basureros registrados en la colección de basureros.
+	 */
+	public ArrayList<Basurero> obtenerBasureros() {
+		ArrayList<Basurero> basureros = new ArrayList<Basurero>();
+		
+		MongoCollection<Document> collection = database.getCollection("basureros");
+		MongoCursor<Document> cursor = collection.find().iterator();
+		
+		try {
+	        while (cursor.hasNext()) {
+	            Document document = cursor.next();
+	            int idBasurero = document.getInteger("id_basurero");
+				Date fechahora = document.getDate("fechahora");
+				Double alturaMax = document.getDouble("altura_max");
+				String estadoLlenado = document.getString("estado_llenado");
+				String estadoCarga = document.getString("estado_carga");
+				Basurero basurero = new Basurero(idBasurero, fechahora, alturaMax, estadoLlenado, estadoCarga);
+				basureros.add(basurero);
+	        }
+	    } finally {
+	        cursor.close();
+	    }
+		
+		return basureros;
+	}
+	
+	/**
+	 * Regresa la última lectura registrada del basurero que se le pase como
+	 * parámetro.
+	 * @param basurero Basurero del que se quiere obtener la última lectura registrada.
+	 * @return Última lectura registrada del basurero pasado como parámetro.
+	 */
+	public Lectura obtenerLecturaMasNueva(Basurero basurero) {
+		Lectura lectura = null;
+		
+		MongoCollection<Document> collection = database.getCollection("lecturas");
+		Document document = collection.find(eq("id_basurero", basurero.getIdBasurero())).sort(new Document("_id", -1)).first();
+		
+		if (document != null) {
+			int idBasurero = document.getInteger("id_basurero");
+			Date fechahora = document.getDate("fechahora");
+			int carga = document.getInteger("carga");
+			double altura = document.getDouble("altura");
+			
+			lectura = new Lectura(idBasurero, fechahora, carga, altura);
+		}
+	
+		return lectura;
+	}
 }

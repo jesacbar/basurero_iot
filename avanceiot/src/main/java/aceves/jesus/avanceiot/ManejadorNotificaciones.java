@@ -22,13 +22,49 @@ import java.util.Properties;
  * Contiene métodos que sirven para verificar si es necesario mandar una o varias notificaciones tras
  * recibir una lectura de un bote de basura.
  */
-public class ManejadorNotificaciones {
+public class ManejadorNotificaciones extends Thread {
     
     private final String USERNAME = "basurer0i0t@gmail.com";
     private final String PASSWORD = "4Gf#I1P0VK#X";
     private final String TO = "jesusgace@gmail.com";
     private final String SUBJECT = "Bote de basura: Alerta de estado";
+    private ManejadorAlmacenaje ma = new ManejadorAlmacenaje();
 
+    /**
+     * Este hilo revisa cada minuto si ha pasado un minuto o más desde que se recibió
+     * la última lectura de cada basurero, y si sí, registra el estado de llenado y carga
+     * del basurero como "DESCONECTADO".
+     */
+    public void run() {
+    	while (true) {
+    		ArrayList<Basurero> basureros = ma.obtenerBasureros();
+    		Date ahora = new Date();
+			// Revisar si ha pasado un minuto desde que se recibió la última lectura de cada basurero
+    		System.out.println("< Revisión de basureros desconectados >");
+    		for (Basurero basurero : basureros) {
+    	    	Lectura lecturaMasNueva = ma.obtenerLecturaMasNueva(basurero);
+    	    	if (lecturaMasNueva != null) {
+    	    		Date fechahoraLectura = lecturaMasNueva.getFechahora();
+        			if (!basurero.getEstadoCarga().equalsIgnoreCase("DESCONECTADO") && ahora.getTime() - fechahoraLectura.getTime() >= 1*60*1000) {
+        				basurero.setEstadoLlenado("DESCONECTADO");
+        				basurero.setEstadoCarga("DESCONECTADO");
+        				basurero.setFechahora(new Date());
+        				ma.actualizarBasurero(basurero);
+        				mandarCorreo("El basurero #" + basurero.getIdBasurero() + " se ha desconectado.");
+        				System.out.println("NOTIFICACIÓN: El basurero #" + basurero.getIdBasurero() + " se ha desconectado.");
+        			}
+    	    	}
+    		}
+    		
+			try {
+				Thread.sleep(60 * 1000);
+			} catch (InterruptedException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+    	}
+    }
+    
     /**
      * Verifica si se cumple alguna o varias de las condiciones para mandar notificaciones y regresa un arreglo de cadenas
      * con los estados que hayan cambiado.

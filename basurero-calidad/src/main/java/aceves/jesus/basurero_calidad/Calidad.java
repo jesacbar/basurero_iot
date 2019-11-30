@@ -1,7 +1,6 @@
 package aceves.jesus.basurero_calidad;
 
 import java.time.Instant;
-import java.util.ArrayList;
 import java.util.Date;
 
 import org.eclipse.paho.client.mqttv3.IMqttDeliveryToken;
@@ -39,11 +38,11 @@ public class Calidad implements MqttCallback{
 			
 			// Se registran los basureros de prueba si no estaban ya registrados
 			if (ma.obtenerBasurero(1) == null) {
-				Basurero basurero1 = new Basurero(1, new Date(), 100, "VACIO", "ALTA");
+				Basurero basurero1 = new Basurero(1, 100, 1);
 				ma.insertarBasurero(basurero1);
-				Basurero basurero2 = new Basurero(2, new Date(), 100, "VACIO", "ALTA");
+				Basurero basurero2 = new Basurero(2, 100, 1);
 				ma.insertarBasurero(basurero2);
-				Basurero basurero3 = new Basurero(3, new Date(), 100, "VACIO", "ALTA");
+				Basurero basurero3 = new Basurero(3, 100, 1);
 				ma.insertarBasurero(basurero3);
 				System.out.println("< Se registraron los basureros de prueba >");
 			}			
@@ -51,7 +50,6 @@ public class Calidad implements MqttCallback{
 			mn.start();
 			
 		} catch (MqttException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 	}
@@ -68,27 +66,15 @@ public class Calidad implements MqttCallback{
 	 */
 	public void messageArrived(String topic, MqttMessage message) throws Exception {
 		String[] partesLectura = message.toString().split(",");
-		Lectura lectura = new Lectura(Integer.parseInt(partesLectura[0]), Date.from(Instant.parse(partesLectura[1])), 
-				Integer.parseInt(partesLectura[2]), Double.parseDouble(partesLectura[3]));
+		Lectura lectura = new Lectura(Integer.parseInt(partesLectura[0]), 
+				Date.from(Instant.parse(partesLectura[1])), 
+				Double.parseDouble(partesLectura[2]));
 		System.out.println("---------------LECTURA RECIBIDA---------------");
 		if (revisarCalidad(lectura)) {
 			System.out.println("CALIDAD: Se pasaron las pruebas de calidad.");
 			ma.insertarLectura(lectura);
 			Basurero basureroLectura = ma.obtenerBasurero(lectura.getIdBasurero());
-			ArrayList<String> estados = mn.verificar(lectura, basureroLectura);
-			if (!estados.isEmpty()) {
-				for (String estado : estados) {
-					if (estado.equalsIgnoreCase("BAJA") || estado.equalsIgnoreCase("ALTA")) {
-						basureroLectura.setEstadoCarga(estado);
-						System.out.println("< Se actualizó el estado de la carga del basurero #" + basureroLectura.getIdBasurero() + " a: " + estado + " >");
-					} else {
-						basureroLectura.setEstadoLlenado(estado);
-						System.out.println("< Se actualizó el estado del llenado del basurero #" + basureroLectura.getIdBasurero() + " a: " + estado + " >");
-					}
-				}
-				basureroLectura.setFechahora(new Date());
-				ma.actualizarBasurero(basureroLectura);
-			}
+			mn.verificar(lectura, basureroLectura);
 		}
 	}
 
@@ -96,7 +82,7 @@ public class Calidad implements MqttCallback{
 	 * Se ejecuta cuando se completa la entrega de un mensaje al servidor MQTT.
 	 */
 	public void deliveryComplete(IMqttDeliveryToken token) {
-		// TODO Auto-generated method stub
+
 		
 	}
 	
@@ -117,7 +103,7 @@ public class Calidad implements MqttCallback{
 			return false;
 		}
 		// Revisar cuando se obtiene una altura que supera la altura máxima registrada del basurero.
-		if (lectura.getAltura() > (ma.obtenerBasurero(lectura.getIdBasurero()).getAlturaMax())) {
+		if (lectura.getAltura() > (ma.obtenerBasurero(lectura.getIdBasurero()).getAltura())) {
 			System.out.println("CALIDAD: Se recibió una lectura de altura superior a la altura del basurero.");
 			return false;
 		}

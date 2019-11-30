@@ -24,10 +24,7 @@ public class SimuladorBasurero {
 			
 			while (true) {
 				System.out.println("Ingrese el ID del basurero:");
-				int idSensor = sc.nextInt();
-				
-				System.out.println("Ingrese la carga de la batería:");
-				int bateria = sc.nextInt();
+				int idBasurero = sc.nextInt();
 				
 				System.out.println("Ingrese la altura leída:");
 				double altura = sc.nextDouble();
@@ -36,7 +33,7 @@ public class SimuladorBasurero {
 				
 			    Instant i = Instant.now();
 			    
-			    String mensaje = idSensor + "," + i + "," +  bateria + "," + alturaForm;
+			    String mensaje = idBasurero + "," + i + "," + alturaForm;
 			    
 			    MqttMessage message = new MqttMessage();
 			    message.setPayload(mensaje.getBytes());
@@ -48,7 +45,6 @@ public class SimuladorBasurero {
 			}
 			
 		} catch (MqttException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		} finally {
 			sc.close();

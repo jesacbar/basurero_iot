@@ -10,9 +10,9 @@ import javax.mail.internet.MimeMessage;
 
 import aceves.jesus.basurero_entidades.Basurero;
 import aceves.jesus.basurero_entidades.Lectura;
+import aceves.jesus.basurero_utilidades.Utilidades;
 
 import java.text.DecimalFormat;
-import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Properties;
@@ -34,7 +34,8 @@ public class ManejadorNotificaciones extends Thread {
 	private final Boolean MANDARCORREOS = false;
 	
 	private HashMap<Basurero, Lectura> ultimasLecturas = new HashMap<Basurero, Lectura>();
-	private HashMap<Basurero, String> estadosBasureros = new HashMap<Basurero, String>();
+	private HashMap<Basurero, String> estadosConexion = new HashMap<Basurero, String>();
+	private HashMap<Basurero, String> estadosLlenado = new HashMap<Basurero, String>();
 	
 	
 	public ManejadorNotificaciones(HashMap<Basurero, Lectura> ultimasLecturas) {
@@ -42,14 +43,20 @@ public class ManejadorNotificaciones extends Thread {
 		this.ultimasLecturas = ultimasLecturas;
 		
 		for (Basurero basurero : ultimasLecturas.keySet()) {
+			
+			// Llenado del mapa de estados de conexión de los basureros.
 			Date ahora = new Date();
 			if (ahora.getTime() - ultimasLecturas.get(basurero).getFechahora().getTime() >= 1 * 60 * 1000) {
-				estadosBasureros.put(basurero, "DESCONECTADO");
-				System.out.println("NOTIFICACIÓN: El basurero #" + basurero.getIdBasurero() + " se ha desconectado.");
+				estadosConexion.put(basurero, "DESCONECTADO");
+				System.out.println("NOTIFICACIÓN: El basurero #" + basurero.getId() + " se ha desconectado.");
 			} else {
-				estadosBasureros.put(basurero, "CONECTADO");
-				System.out.println("NOTIFICACIÓN: El basurero #" + basurero.getIdBasurero() + " se ha conectado.");
+				estadosConexion.put(basurero, "CONECTADO");
+				System.out.println("NOTIFICACIÓN: El basurero #" + basurero.getId() + " se ha conectado.");
 			}
+			
+			// Llenado del mapa de estados de llenado de los basureros.
+			estadosLlenado.put(basurero, Utilidades.calcularEstado(basurero, ultimasLecturas.get(basurero)));
+
 		}
 	}
 
@@ -70,18 +77,17 @@ public class ManejadorNotificaciones extends Thread {
 			System.out.println("< Revisión de basureros desconectados iniciada >");
 			for (Basurero basurero : ultimasLecturas.keySet()) {
 				Lectura ultimaLectura = ultimasLecturas.get(basurero);
-				if (estadosBasureros.get(basurero).equalsIgnoreCase("CONECTADO") && 
+				if (estadosConexion.get(basurero).equalsIgnoreCase("CONECTADO") && 
 						ahora.getTime() - ultimaLectura.getFechahora().getTime() >= 1 * SEGUNDOS * 1000) {
-					mandarCorreo("El basurero #" + basurero.getIdBasurero() + " se ha desconectado.");
-					estadosBasureros.put(basurero, "DESCONECTADO");
-					System.out.println("NOTIFICACIÓN: El basurero #" + basurero.getIdBasurero() + " se ha desconectado.");
+					mandarCorreo("El basurero #" + basurero.getId() + " se ha desconectado.");
+					estadosConexion.put(basurero, "DESCONECTADO");
+					System.out.println("NOTIFICACIÓN: El basurero #" + basurero.getId() + " se ha desconectado.");
 				}
 			}
 			System.out.println("< Revisión de basureros desconectados terminada >");
 			try {
 				Thread.sleep(SEGUNDOS * 1000);
 			} catch (InterruptedException e) {
-				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
 		}
@@ -106,67 +112,48 @@ public class ManejadorNotificaciones extends Thread {
 	 * @return Regresa un arreglo de cadenas con los estados que hayan cambiado
 	 *         según las condiciones que se hayan cumplido.
 	 */
-	public ArrayList<String> verificar(Lectura lectura, Basurero basureroLectura) {
+	public void verificar(Lectura lectura, Basurero basureroLectura) {
 
-		double porcentajeLlenado = ((basureroLectura.getAlturaMax() - lectura.getAltura()) * 100)
-				/ basureroLectura.getAlturaMax();
-		DecimalFormat df = new DecimalFormat("#.00");
+		double porcentajeLlenado = Utilidades.calcularPorcentajeLlenado(basureroLectura, lectura);
+		DecimalFormat df = new DecimalFormat("#0.00");
 		String porcentajeForm = df.format(porcentajeLlenado);
-		ArrayList<String> estados = new ArrayList<String>();
 
 		// Actualizar ultima lectura de ese bote de basura en el mapa de ultimas lecturas.
 		ultimasLecturas.put(basureroLectura, lectura);
-		if (estadosBasureros.get(basureroLectura).equalsIgnoreCase("DESCONECTADO")) {
-			estadosBasureros.put(basureroLectura, "CONECTADO");
-			System.out.println("NOTIFICACIÓN: El basurero #" + basureroLectura.getIdBasurero() + " se ha conectado.");
+		
+		if (estadosConexion.get(basureroLectura) == null || estadosConexion.get(basureroLectura).equalsIgnoreCase("DESCONECTADO")) {
+			estadosConexion.put(basureroLectura, "CONECTADO");
+			System.out.println("NOTIFICACIÓN: El basurero #" + basureroLectura.getId() + " se ha conectado.");
 		}
 		
+		String estadoActual = estadosLlenado.get(basureroLectura);
+		String estadoNuevo = Utilidades.calcularEstado(basureroLectura, lectura);
+		// Cuando se reciba la primer lectura de un basurero
+		if (estadoActual == null) {
+
+		}
 		// Cuando esté aprox. "lleno"
-		if (!basureroLectura.getEstadoLlenado().equalsIgnoreCase("LLENO") && porcentajeLlenado > 90) {
-			System.out.println(
-					"NOTIFICACIÓN: El basurero #" + lectura.getIdBasurero() + " está " + porcentajeForm + "% lleno.");
+		else if (!estadoActual.equalsIgnoreCase("LLENO") && estadoNuevo.equals("LLENO")) {
 			mandarCorreo("El basurero #" + lectura.getIdBasurero() + " está " + porcentajeForm + "% lleno.");
-			estados.add("LLENO");
 		}
 		// Cuando esté aprox. tres cuartos
-		else if (!basureroLectura.getEstadoLlenado().equalsIgnoreCase("CASILLENO") && porcentajeLlenado <= 90
-				&& porcentajeLlenado >= 60) {
-			System.out.println(
-					"NOTIFICACIÓN: El basurero #" + lectura.getIdBasurero() + " está " + porcentajeForm + "% lleno.");
+		else if (!estadoActual.equalsIgnoreCase("CASILLENO") && estadoNuevo.equals("CASILLENO")) {
 			mandarCorreo("El basurero #" + lectura.getIdBasurero() + " está " + porcentajeForm + "% lleno.");
-			estados.add("CASILLENO");
 		}
 		// Cuando esté aprox. a la mitad
-		else if (!basureroLectura.getEstadoLlenado().equalsIgnoreCase("MEDIO") && porcentajeLlenado < 60
-				&& porcentajeLlenado > 40) {
-			System.out.println(
-					"NOTIFICACIÓN: El basurero #" + lectura.getIdBasurero() + " está " + porcentajeForm + "% lleno.");
+		else if (!estadoActual.equalsIgnoreCase("MEDIO") && estadoNuevo.equals("MEDIO")) {
 			mandarCorreo("El basurero #" + lectura.getIdBasurero() + " está " + porcentajeForm + "% lleno.");
-			estados.add("MEDIO");
 		}
 		// Cuando esté aprox. un cuarto lleno
-		else if (!basureroLectura.getEstadoLlenado().equalsIgnoreCase("CASIVACIO") && porcentajeLlenado <= 40
-				&& porcentajeLlenado >= 10) {
-			estados.add("CASIVACIO");
+		else if (!estadoActual.equalsIgnoreCase("CASIVACIO") && estadoNuevo.equals("CASIVACIO")) {
+			
 		}
 		// Cuando esté aprox. vacío
-		else if (!basureroLectura.getEstadoLlenado().equalsIgnoreCase("VACIO") && porcentajeLlenado < 10) {
-			estados.add("VACIO");
+		else if (!estadoActual.equalsIgnoreCase("VACIO") && estadoNuevo.equals("VACIO")) {
+			
 		}
-		// Cuando le quedara poca carga a un sensor
-		if (!basureroLectura.getEstadoCarga().equalsIgnoreCase("BAJA") && lectura.getCarga() <= 10) {
-			System.out.println(
-					"NOTIFICACIÓN: Al sensor del basurero #" + lectura.getIdBasurero() + " le queda poca carga.");
-			mandarCorreo("Al sensor del basurero #" + lectura.getIdBasurero() + " le queda " + lectura.getCarga()
-					+ "% de carga.");
-			estados.add("BAJA");
-		}
-		// Cuando la pila no esté muy baja
-		else if (!basureroLectura.getEstadoCarga().equalsIgnoreCase("ALTA") && lectura.getCarga() > 10) {
-			estados.add("ALTA");
-		}
-
-		return estados;
+		System.out.println("NOTIFICACIÓN: El basurero #" + lectura.getIdBasurero() + " está " + porcentajeForm + "% lleno.");
+		estadosLlenado.put(basureroLectura, estadoNuevo);
 	}
 
 	/**

@@ -8,7 +8,9 @@ import com.mongodb.client.MongoCursor;
 import com.mongodb.client.MongoDatabase;
 
 import aceves.jesus.basurero_entidades.Basurero;
+import aceves.jesus.basurero_entidades.CambioLlenado;
 import aceves.jesus.basurero_entidades.Lectura;
+import aceves.jesus.basurero_utilidades.Utilidades;
 
 import static com.mongodb.client.model.Filters.eq;
 
@@ -42,13 +44,93 @@ public class ManejadorAlmacenaje {
 	public void insertarLectura(Lectura lectura) {
 		MongoCollection<Document> collection = database.getCollection("lecturas");
 
-		Document document = new Document("id_basurero", lectura.getIdBasurero())
-				.append("fechahora", lectura.getFechahora()).append("carga", lectura.getCarga())
+		Document document = new Document("idBasurero", lectura.getIdBasurero())
+				.append("fechahora", lectura.getFechahora())
 				.append("altura", lectura.getAltura());
 
 		collection.insertOne(document);
 
 		System.out.println("MANEJADOR ALMACENAJE: Inserción de lectura exitosa.");
+		
+		Basurero basurero = obtenerBasurero(lectura.getIdBasurero());
+		CambioLlenado cambioLlenadoActual = obtenerUltimoCambioLlenado(basurero);
+		double porcentajeLlenadoNuevo = Utilidades.calcularPorcentajeLlenado(basurero, lectura);
+		
+		// Que hacer si no se ha ingresado un cambio de llenado antes.
+		if (cambioLlenadoActual == null) {
+			System.out.println("PRIMERA INSERCIÓN DE CAMBIO DE LLENADO Y ESTADO");
+			CambioLlenado cambioLlenadoNuevo = new CambioLlenado(
+					lectura.getIdBasurero(),
+					lectura.getFechahora(), 
+					0,
+					porcentajeLlenadoNuevo,
+					0,
+					porcentajeLlenadoNuevo * basurero.getVolumen(),
+					Utilidades.calcularEstado(basurero, lectura)
+					);
+			insertarCambioLlenado(cambioLlenadoNuevo);
+			insertarCambioEstado(cambioLlenadoNuevo);
+		}
+		// Ver si ha ocurrido un cambio de porcentaje de llenado
+		else if (cambioLlenadoActual != null && porcentajeLlenadoNuevo != cambioLlenadoActual.getLlenadoActual()) {
+			System.out.println("SE DETECTÓ CAMBIO DE LLENADO");
+			CambioLlenado cambioLlenadoNuevo = new CambioLlenado(
+					lectura.getIdBasurero(),
+					lectura.getFechahora(), 
+					cambioLlenadoActual.getLlenadoActual(),
+					porcentajeLlenadoNuevo,
+					cambioLlenadoActual.getVolumenActual(),
+					porcentajeLlenadoNuevo * basurero.getVolumen(),
+					Utilidades.calcularEstado(basurero, lectura)
+					);
+			insertarCambioLlenado(cambioLlenadoNuevo);
+			
+			// Ver si ha ocurrido un cambio de estados
+			if (cambioLlenadoNuevo.getEstado() != cambioLlenadoActual.getEstado()) {
+				System.out.println("SE DETECTÓ CAMBIO DE ESTADO");
+				insertarCambioEstado(cambioLlenadoNuevo);
+			}
+		}
+	}
+	
+	/**
+	 * Inserta el cambio de llenado que se le pase como parámetro a la base de datos.
+	 * @param cambioLlenado Cambio de llenado que se quiere registrar.
+	 */
+	public void insertarCambioLlenado(CambioLlenado cambioLlenado) {
+		MongoCollection<Document> collection = database.getCollection("cambiosLlenado");
+
+		Document document = new Document("idBasurero", cambioLlenado.getIdBasurero())
+				.append("fechahora", cambioLlenado.getFechahora())
+				.append("llenadoAnterior", cambioLlenado.getLlenadoAnterior())
+				.append("llenadoActual", cambioLlenado.getLlenadoActual())
+				.append("volumenAnterior", cambioLlenado.getVolumenAnterior())
+				.append("volumenActual", cambioLlenado.getVolumenAnterior())
+				.append("estado", cambioLlenado.getEstado());
+
+		collection.insertOne(document);
+
+		System.out.println("MANEJADOR ALMACENAJE: Inserción de cambio de llenado exitosa.");
+	}
+	
+	/**
+	 * Inserta el cambio de estado que se le pase como parámetro a la base de datos.
+	 * @param cambioEstado Cambio de estado que se quiere registrar.
+	 */
+	public void insertarCambioEstado(CambioLlenado cambioEstado) {
+		MongoCollection<Document> collection = database.getCollection("cambiosEstado");
+
+		Document document = new Document("idBasurero", cambioEstado.getIdBasurero())
+				.append("fechahora", cambioEstado.getFechahora())
+				.append("llenadoAnterior", cambioEstado.getLlenadoAnterior())
+				.append("llenadoActual", cambioEstado.getLlenadoActual())
+				.append("volumenAnterior", cambioEstado.getVolumenAnterior())
+				.append("volumenActual", cambioEstado.getVolumenAnterior())
+				.append("estado", cambioEstado.getEstado());
+
+		collection.insertOne(document);
+
+		System.out.println("MANEJADOR ALMACENAJE: Inserción de cambio de estado exitosa.");
 	}
 
 	/**
@@ -59,10 +141,9 @@ public class ManejadorAlmacenaje {
 	public void insertarBasurero(Basurero basurero) {
 		MongoCollection<Document> collection = database.getCollection("basureros");
 
-		Document document = new Document("id_basurero", basurero.getIdBasurero())
-				.append("fechahora", basurero.getFechahora()).append("altura_max", basurero.getAlturaMax())
-				.append("estado_llenado", basurero.getEstadoLlenado())
-				.append("estado_carga", basurero.getEstadoCarga());
+		Document document = new Document("id", basurero.getId())
+				.append("altura", basurero.getAltura())
+				.append("volumen", basurero.getVolumen());
 
 		collection.insertOne(document);
 
@@ -78,12 +159,11 @@ public class ManejadorAlmacenaje {
 		MongoCollection<Document> collection = database.getCollection("basureros");
 
 		Document query = new Document();
-		query.append("id_basurero", basurero.getIdBasurero());
+		query.append("id", basurero.getId());
 
-		Document update = new Document("id_basurero", basurero.getIdBasurero())
-				.append("fechahora", basurero.getFechahora()).append("altura_max", basurero.getAlturaMax())
-				.append("estado_llenado", basurero.getEstadoLlenado())
-				.append("estado_carga", basurero.getEstadoCarga());
+		Document update = new Document("id", basurero.getId())
+				.append("altura", basurero.getAltura())
+				.append("volumen", basurero.getVolumen());
 
 		Document updateOp = new Document("$set", update);
 
@@ -99,17 +179,14 @@ public class ManejadorAlmacenaje {
 	 */
 	public Basurero obtenerBasurero(int id) {
 		MongoCollection<Document> collection = database.getCollection("basureros");
-		Document document = collection.find(eq("id_basurero", id)).first();
+		Document document = collection.find(eq("id", id)).first();
 
 		if (document == null) {
 			return null;
 		} else {
-			int idBasurero = document.getInteger("id_basurero");
-			Date fechahora = document.getDate("fechahora");
-			Double alturaMax = document.getDouble("altura_max");
-			String estadoLlenado = document.getString("estado_llenado");
-			String estadoCarga = document.getString("estado_carga");
-			Basurero basurero = new Basurero(idBasurero, fechahora, alturaMax, estadoLlenado, estadoCarga);
+			Double altura = document.getDouble("altura");
+			Double volumen = document.getDouble("volumen");
+			Basurero basurero = new Basurero(id, altura, volumen);
 			return basurero;
 		}
 	}
@@ -130,12 +207,10 @@ public class ManejadorAlmacenaje {
 		try {
 			while (cursor.hasNext()) {
 				Document document = cursor.next();
-				int idBasurero = document.getInteger("id_basurero");
-				Date fechahora = document.getDate("fechahora");
-				Double alturaMax = document.getDouble("altura_max");
-				String estadoLlenado = document.getString("estado_llenado");
-				String estadoCarga = document.getString("estado_carga");
-				Basurero basurero = new Basurero(idBasurero, fechahora, alturaMax, estadoLlenado, estadoCarga);
+				int id = document.getInteger("id");
+				Double altura = document.getDouble("altura");
+				Double volumen = document.getDouble("volumen");
+				Basurero basurero = new Basurero(id, altura, volumen);
 				basureros.add(basurero);
 			}
 		} finally {
@@ -157,21 +232,83 @@ public class ManejadorAlmacenaje {
 		Lectura lectura = null;
 
 		MongoCollection<Document> collection = database.getCollection("lecturas");
-		Document document = collection.find(eq("id_basurero", basurero.getIdBasurero())).sort(new Document("_id", -1))
+		Document document = collection.find(eq("idBasurero", basurero.getId())).sort(new Document("fechahora", -1))
 				.first();
 
 		if (document != null) {
-			int idBasurero = document.getInteger("id_basurero");
+			int idBasurero = document.getInteger("idBasurero");
 			Date fechahora = document.getDate("fechahora");
-			int carga = document.getInteger("carga");
 			double altura = document.getDouble("altura");
 
-			lectura = new Lectura(idBasurero, fechahora, carga, altura);
+			lectura = new Lectura(idBasurero, fechahora, altura);
 		}
 
 		return lectura;
 	}
+	
+	/**
+	 * Regresa el último cambio de llenado registrado en la base de datos 
+	 * del basurero que se le pase como parámetro
+	 * @param basurero Basurero del que se quiere obtener el último cambio de llenado.
+	 * @return Último cambio de llenado del basurero que se le pase como parámetro.
+	 */
+	public CambioLlenado obtenerUltimoCambioLlenado(Basurero basurero) {
+		CambioLlenado cambioLlenado = null;
+		
+		MongoCollection<Document> collection = database.getCollection("cambiosLlenado");
+		Document document = collection.find(eq("idBasurero", basurero.getId())).sort(new Document("fechahora", -1))
+				.first();
+		
+		if (document != null) {
+			int idBasurero = document.getInteger("idBasurero");
+			Date fechahora = document.getDate("fechahora");
+			double llenadoAnterior = document.getDouble("llenadoAnterior");
+			double llenadoActual = document.getDouble("llenadoActual");
+			double volumenAnterior = document.getDouble("volumenAnterior");
+			double volumenActual = document.getDouble("volumenActual");
+			String estado = document.getString("estado");
+			
+			cambioLlenado = new CambioLlenado(idBasurero, fechahora, llenadoAnterior, llenadoActual, 
+					volumenAnterior, volumenActual, estado);
+		}
+		
+		return cambioLlenado;
+	}
+	
+	/**
+	 * Regrea el último cambio de estado del basurero que se le pase como parámetro
+	 * que esté registrado en la base de datos.
+	 * @param basurero Basurero del que se quiere obtener el último cambio de estado.
+	 * @return Último cambio de estado registrado del basurero que se le pase como parámetro.
+	 */
+	public CambioLlenado obtenerUltimoCambioEstado(Basurero basurero) {
+		CambioLlenado cambioEstado = null;
+		
+		MongoCollection<Document> collection = database.getCollection("cambiosEstado");
+		Document document = collection.find(eq("idBasurero", basurero.getId())).sort(new Document("fechahora", -1))
+				.first();
+		
+		if (document != null) {
+			int idBasurero = document.getInteger("idBasurero");
+			Date fechahora = document.getDate("fechahora");
+			double llenadoAnterior = document.getDouble("llenadoAnterior");
+			double llenadoActual = document.getDouble("llenadoActual");
+			double volumenAnterior = document.getDouble("volumenAnterior");
+			double volumenActual = document.getDouble("volumenActual");
+			String estado = document.getString("estado");
+			
+			cambioEstado = new CambioLlenado(idBasurero, fechahora, llenadoAnterior, llenadoActual, 
+					volumenAnterior, volumenActual, estado);
+		}
+		
+		return cambioEstado;
+	}
 
+	/**
+	 * Regresa un HashMap con las útlimas lecturas registradas de cada bote de basura.
+	 * @return HashMap con los botes de basura como llaves, y sus últimas lecturas
+	 * como valor.
+	 */
 	public HashMap<Basurero, Lectura> obtenerUltimasLecturas() {
 		HashMap<Basurero, Lectura> ultimasLecturas = new HashMap<Basurero, Lectura>();
 		ArrayList<Basurero> basureros = obtenerBasureros();

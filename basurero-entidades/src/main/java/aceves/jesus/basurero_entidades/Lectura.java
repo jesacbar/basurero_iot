@@ -11,20 +11,12 @@ import java.util.Date;
 public class Lectura {
 	private int idBasurero;
 	private Date fechahora;
-	private int carga;
 	private double altura;
 	
-	public Lectura() {
-		this.idBasurero = -1;
-		this.fechahora = null;
-		this.carga = -1;
-		this.altura = -1;
-	}
-	
-	public Lectura(int idBasurero, Date fechahora, int carga, double altura) {
+	public Lectura(int idBasurero, Date fechahora, double altura) {
+		super();
 		this.idBasurero = idBasurero;
 		this.fechahora = fechahora;
-		this.carga = carga;
 		this.altura = altura;
 	}
 
@@ -32,7 +24,7 @@ public class Lectura {
 		return idBasurero;
 	}
 
-	public void setIdSensor(int idBasurero) {
+	public void setIdBasurero(int idBasurero) {
 		this.idBasurero = idBasurero;
 	}
 
@@ -42,14 +34,6 @@ public class Lectura {
 
 	public void setFechahora(Date fechahora) {
 		this.fechahora = fechahora;
-	}
-
-	public int getCarga() {
-		return carga;
-	}
-
-	public void setCarga(int carga) {
-		this.carga = carga;
 	}
 
 	public double getAltura() {
@@ -67,7 +51,6 @@ public class Lectura {
 		long temp;
 		temp = Double.doubleToLongBits(altura);
 		result = prime * result + (int) (temp ^ (temp >>> 32));
-		result = prime * result + carga;
 		result = prime * result + ((fechahora == null) ? 0 : fechahora.hashCode());
 		result = prime * result + idBasurero;
 		return result;
@@ -84,8 +67,6 @@ public class Lectura {
 		Lectura other = (Lectura) obj;
 		if (Double.doubleToLongBits(altura) != Double.doubleToLongBits(other.altura))
 			return false;
-		if (carga != other.carga)
-			return false;
 		if (fechahora == null) {
 			if (other.fechahora != null)
 				return false;
@@ -98,8 +79,7 @@ public class Lectura {
 
 	@Override
 	public String toString() {
-		return "Lectura [idSensor=" + idBasurero + ", fechahora=" + fechahora + ", carga=" + carga + ", altura=" + altura
-				+ "]";
+		return "Lectura [idBasurero=" + idBasurero + ", fechahora=" + fechahora + ", altura=" + altura + "]";
 	}
 	
 }

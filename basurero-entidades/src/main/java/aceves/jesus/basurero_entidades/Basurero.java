@@ -1,7 +1,5 @@
 package aceves.jesus.basurero_entidades;
 
-import java.util.Date;
-
 /**
  * Basurero.java
  * Autores: Karla Castro, María Germán, Jesús Aceves
@@ -9,59 +7,39 @@ import java.util.Date;
  */
 
 public class Basurero {
-	private int idBasurero;
-	private Date fechahora;
-	private double alturaMax;
-	private String estadoLlenado;
-	private String estadoCarga;
+	private int id;
+	private double altura;
+	private double volumen;
 	
-	public Basurero(int idBasurero, Date fechahora, double alturaMax, String estadoLlenado, String estadoCarga) {
+	public Basurero(int id, double altura, double volumen) {
 		super();
-		this.idBasurero = idBasurero;
-		this.fechahora = fechahora;
-		this.alturaMax = alturaMax;
-		this.estadoLlenado = estadoLlenado;
-		this.estadoCarga = estadoCarga;
+		this.id = id;
+		this.altura = altura;
+		this.volumen = volumen;
 	}
 
-	public String getEstadoLlenado() {
-		return estadoLlenado;
-	}
-
-	public void setEstadoLlenado(String estadoLlenado) {
-		this.estadoLlenado = estadoLlenado;
-	}
-
-	public String getEstadoCarga() {
-		return estadoCarga;
-	}
-
-	public void setEstadoCarga(String estadoCarga) {
-		this.estadoCarga = estadoCarga;
-	}
-
-	public Date getFechahora() {
-		return fechahora;
-	}
-
-	public void setFechahora(Date fechahora) {
-		this.fechahora = fechahora;
-	}
-
-	public int getIdBasurero() {
-		return idBasurero;
+	public int getId() {
+		return id;
 	}
 
 	public void setIdBasurero(int idBasurero) {
-		this.idBasurero = idBasurero;
+		this.id = idBasurero;
 	}
 
-	public double getAlturaMax() {
-		return alturaMax;
+	public double getAltura() {
+		return altura;
 	}
 
-	public void setAlturaMax(double alturaMax) {
-		this.alturaMax = alturaMax;
+	public void setAltura(double altura) {
+		this.altura = altura;
+	}
+
+	public double getVolumen() {
+		return volumen;
+	}
+
+	public void setVolumen(double volumen) {
+		this.volumen = volumen;
 	}
 
 	@Override
@@ -69,12 +47,11 @@ public class Basurero {
 		final int prime = 31;
 		int result = 1;
 		long temp;
-		temp = Double.doubleToLongBits(alturaMax);
+		temp = Double.doubleToLongBits(altura);
 		result = prime * result + (int) (temp ^ (temp >>> 32));
-		result = prime * result + ((estadoCarga == null) ? 0 : estadoCarga.hashCode());
-		result = prime * result + ((estadoLlenado == null) ? 0 : estadoLlenado.hashCode());
-		result = prime * result + ((fechahora == null) ? 0 : fechahora.hashCode());
-		result = prime * result + idBasurero;
+		result = prime * result + id;
+		temp = Double.doubleToLongBits(volumen);
+		result = prime * result + (int) (temp ^ (temp >>> 32));
 		return result;
 	}
 
@@ -87,32 +64,18 @@ public class Basurero {
 		if (getClass() != obj.getClass())
 			return false;
 		Basurero other = (Basurero) obj;
-		if (Double.doubleToLongBits(alturaMax) != Double.doubleToLongBits(other.alturaMax))
+		if (Double.doubleToLongBits(altura) != Double.doubleToLongBits(other.altura))
 			return false;
-		if (estadoCarga == null) {
-			if (other.estadoCarga != null)
-				return false;
-		} else if (!estadoCarga.equals(other.estadoCarga))
+		if (id != other.id)
 			return false;
-		if (estadoLlenado == null) {
-			if (other.estadoLlenado != null)
-				return false;
-		} else if (!estadoLlenado.equals(other.estadoLlenado))
-			return false;
-		if (fechahora == null) {
-			if (other.fechahora != null)
-				return false;
-		} else if (!fechahora.equals(other.fechahora))
-			return false;
-		if (idBasurero != other.idBasurero)
+		if (Double.doubleToLongBits(volumen) != Double.doubleToLongBits(other.volumen))
 			return false;
 		return true;
 	}
 
 	@Override
 	public String toString() {
-		return "Basurero [idBasurero=" + idBasurero + ", fechahora=" + fechahora + ", alturaMax=" + alturaMax
-				+ ", estadoLlenado=" + estadoLlenado + ", estadoCarga=" + estadoCarga + "]";
+		return "Basurero [idBasurero=" + id + ", altura=" + altura + ", volumen=" + volumen + "]";
 	}
 	
 }

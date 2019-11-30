@@ -19,7 +19,7 @@ public class SimuladorBasurero {
 		Scanner sc = new Scanner(System.in);
 		
 		try {
-			client = new MqttClient("tcp://localhost:1883", MqttClient.generateClientId());
+			client = new MqttClient("tcp://test.mosquitto.org:1883", MqttClient.generateClientId());
 			client.connect();
 			
 			while (true) {
@@ -41,7 +41,7 @@ public class SimuladorBasurero {
 			    MqttMessage message = new MqttMessage();
 			    message.setPayload(mensaje.getBytes());
 
-				client.publish("lecturas_basureros", message);
+				client.publish("basurero-iot", message);
 				
 				System.out.println("---------------LECTURA MANDADA---------------");
 				

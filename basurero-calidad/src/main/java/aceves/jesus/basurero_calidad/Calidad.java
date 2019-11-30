@@ -31,14 +31,13 @@ public class Calidad implements MqttCallback{
 		MqttClient client;
 		
 		try {
-			client = new MqttClient("tcp://localhost:1883", MqttClient.generateClientId());
+			client = new MqttClient("tcp://test.mosquitto.org:1883", MqttClient.generateClientId());
 			client.setCallback(new Calidad());
 			client.connect();
 			System.out.println("--- Se estableció la conexión con el broker MQTT ---");
-			client.subscribe("lecturas_basureros");
+			client.subscribe("basurero-iot");
 			
 			// Se registran los basureros de prueba si no estaban ya registrados
-			ManejadorAlmacenaje ma = new ManejadorAlmacenaje();
 			if (ma.obtenerBasurero(1) == null) {
 				Basurero basurero1 = new Basurero(1, new Date(), 100, "VACIO", "ALTA");
 				ma.insertarBasurero(basurero1);

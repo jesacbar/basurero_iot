@@ -31,7 +31,7 @@ public class ManejadorAlmacenaje {
 	 */
 	public ManejadorAlmacenaje() {
 		mongo = new MongoClient("localhost", 27017);
-		database = mongo.getDatabase("basureros_iot");
+		database = mongo.getDatabase("basurero-bd");
 	}
 
 	/**

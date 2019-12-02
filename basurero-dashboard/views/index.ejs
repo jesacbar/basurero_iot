@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+  <meta name="description" content="">
+  <meta name="author" content="">
+
+  <title>Dashboard para sistema de basureros IoT</title>
+
+  <!-- Custom fonts for this template-->
+  <link href="vendor/fontawesome-free/css/all.min.css" rel="stylesheet" type="text/css">
+  <link
+    href="https://fonts.googleapis.com/css?family=Nunito:200,200i,300,300i,400,400i,600,600i,700,700i,800,800i,900,900i"
+    rel="stylesheet">
+
+  <!-- Custom styles for this template-->
+  <link href="css/sb-admin-2.min.css" rel="stylesheet">
+
+</head>
+
+<body id="page-top">
+
+  <!-- Page Wrapper -->
+  <div id="wrapper">
+
+    <!-- Content Wrapper -->
+    <div id="content-wrapper" class="d-flex flex-column">
+
+      <!-- Main Content -->
+      <br />
+      <div id="content">
+
+        <!-- Begin Page Content -->
+        <div class="container-fluid">
+
+          <!-- Page Heading -->
+          <div class="d-sm-flex align-items-center justify-content-between mb-4">
+            <h1 class="h3 mb-0 text-gray-800">Dashboard para sistema de basureros IoT</h1>
+          </div>
+
+          <!-- Content Row -->
+          <div class="row">
+            <!-- Content Column -->
+            <div class="col-lg-12 mb-4">
+              <!-- Porcentajes de llenado de basureros -->
+              <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                  <h6 class="m-0 font-weight-bold text-primary">Porcentaje de llenado de basureros</h6>
+                </div>
+                <div class="card-body">
+                  <% for(var i=0; i < datosBasureros.length; i++){ %>
+                    <h4 class="small font-weight-bold">Basurero #<%=datosBasureros[i].idBasurero%><span class="float-right"><%=datosBasureros[i].llenadoActual%>%</span></h4>
+                    <div class="progress mb-4">
+                      <div class="progress-bar" role="progressbar" style="width: <%=datosBasureros[i].llenadoActual%>%" aria-valuenow="20" aria-valuemin="0"
+                        aria-valuemax="100"></div>
+                    </div>
+                  <% } %>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="row">
+            <!-- Promedio de porcentaje de llenado de los basureros -->
+            <div class="col-xl-3 col-md-6 mb-4">
+              <div class="card border-left-primary shadow h-100 py-2">
+                <div class="card-body">
+                  <div class="row no-gutters align-items-center">
+                    <div class="col mr-2">
+                      <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">Promedio de porcentaje de
+                        llenado de los basureros</div>
+                      <div class="row no-gutters align-items-center">
+                        <div class="col-auto">
+                          <div class="h5 mb-0 mr-3 font-weight-bold text-gray-800"><%=datosGenerales.promedioLlenadoTodos%>%</div>
+                        </div>
+                        <div class="col">
+                          <div class="progress progress-sm mr-2">
+                            <div class="progress-bar bg-primary" role="progressbar" style="width: <%=datosGenerales.promedioLlenadoTodos%>%"
+                              aria-valuenow="<%=datosGenerales.promedioLlenadoTodos%>" aria-valuemin="0" aria-valuemax="100"></div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                    <div class="col-auto">
+                      <i class="fas fa-percentage fa-2x text-gray-800"></i>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Basurero más usado -->
+            <div class="col-xl-3 col-md-6 mb-4">
+              <div class="card border-left-primary shadow h-100 py-2">
+                <div class="card-body">
+                  <div class="row no-gutters align-items-center">
+                    <div class="col mr-2">
+                      <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">Basurero más usado en el
+                        día</div>
+                      <div class="h5 mb-0 font-weight-bold text-gray-800"><%=datosGenerales.basureroMasUsado%></div>
+                    </div>
+                    <div class="col-auto">
+                      <i class="fas fa-trash fa-2x text-gray-800"></i>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Total del volumen de basura que ha sido retirada -->
+            <div class="col-xl-3 col-md-6 mb-4">
+              <div class="card border-left-primary shadow h-100 py-2">
+                <div class="card-body">
+                  <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">Total del volumen de basura que
+                    ha sido retirada</div>
+                  <div class="row no-gutters align-items-center">
+                    <div class="col mr-2">
+                      <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">En el día
+                      </div>
+                      <div class="h5 mb-0 font-weight-bold text-gray-800"><%=datosGenerales.volumenPorDiaTotal%> m³</div>
+                    </div>
+                    <div class="col mr-2">
+                      <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">En la semana</div>
+                      <div class="h5 mb-0 font-weight-bold text-gray-800"><%=datosGenerales.volumenPorSemanaTotal%> m³</div>
+                    </div>
+                    <div class="col mr-2">
+                      <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">En el mes</div>
+                      <div class="h5 mb-0 font-weight-bold text-gray-800"><%=datosGenerales.volumenPorMesTotal%> m³</div>
+                    </div>
+                    <div class="col-auto">
+                      <i class="fas fa-cubes fa-2x text-gray-800"></i>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+          </div>
+
+          <% for(var i=0; i < datosBasureros.length; i++){ %>
+          <!-- Fila de basurero -->
+          <div class="card border-left-primary shadow h-100 py-3">
+            <div class="col mr-2">
+              <div class="text-xl font-weight-bold text-primary text-uppercase mb-1">Basurero #<%=datosBasureros[i].idBasurero%>
+              </div>
+            </div>
+            <div class="row">
+              <div class="col-xl-12 col-md-6 mb-4">
+                <div class="card shadow h-100 py-2">
+                  <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                      <div class="col mr-2">
+                        <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">Porcentaje de
+                          llenado del basurero</div>
+                        <div class="row no-gutters align-items-center">
+                          <div class="col-auto">
+                            <div class="h5 mb-0 mr-3 font-weight-bold text-gray-800"><%=datosBasureros[i].llenadoActual%>%</div>
+                          </div>
+                          <div class="col">
+                            <div class="progress progress-sm mr-2">
+                              <div class="progress-bar bg-primary" role="progressbar" style="width: <%=datosBasureros[i].llenadoActual%>%"
+                                aria-valuenow="<%=datosBasureros[i].llenadoActual%>" aria-valuemin="0" aria-valuemax="100"></div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                      <div class="col-auto">
+                        <i class="fas fa-percentage fa-2x text-gray-800"></i>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="row">
+              <div class="col-xl-3 col-md-6 mb-4">
+                <div class="card shadow h-100 py-2">
+                  <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                      <div class="col mr-2">
+                        <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">Tiempo desde el último
+                          cambio de porcentaje de llenado</div>
+                        <div class="h5 mb-0 font-weight-bold text-gray-800"><%=datosBasureros[i].tiempoUltimoCambio%> minuto(s)</div>
+                      </div>
+                      <div class="col-auto">
+                        <i class="fas fa-clock fa-2x text-gray-800"></i>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="col-xl-3 col-md-6 mb-4">
+                <div class="card shadow h-100 py-2">
+                  <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                      <div class="col mr-2">
+                        <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">Tiempo desde el último
+                          vaciado</div>
+                        <div class="h5 mb-0 font-weight-bold text-gray-800"><%=datosBasureros[i].tiempoUltimoVaciado%> minuto(s)</div>
+                      </div>
+                      <div class="col-auto">
+                        <i class="fas fa-clock fa-2x text-gray-800"></i>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="col-xl-3 col-md-6 mb-4">
+                <div class="card shadow h-100 py-2">
+                  <div class="card-body">
+                    <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">Veces que se ha llenado el
+                      basurero</div>
+                    <div class="row no-gutters align-items-center">
+                      <div class="col mr-2">
+                        <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">En el día</div>
+                        <div class="h5 mb-0 font-weight-bold text-gray-800"><%=datosBasureros[i].numLlenadosPorDia%></div>
+                      </div>
+                      <div class="col mr-2">
+                        <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">En la semana</div>
+                        <div class="h5 mb-0 font-weight-bold text-gray-800"><%=datosBasureros[i].numLlenadosPorSemana%></div>
+                      </div>
+                      <div class="col mr-2">
+                        <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">En el mes</div>
+                        <div class="h5 mb-0 font-weight-bold text-gray-800"><%=datosBasureros[i].numLlenadosPorMes%></div>
+                      </div>
+                      <div class="col-auto">
+                        <i class="fas fa-trash-restore fa-2x text-gray-800"></i>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="col-xl-3 col-md-6 mb-4">
+                <div class="card shadow h-100 py-2">
+                  <div class="card-body">
+                    <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">Volumen de basura que ha sido
+                      retirada</div>
+                    <div class="row no-gutters align-items-center">
+                      <div class="col mr-2">
+                        <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">En el día
+                        </div>
+                        <div class="h5 mb-0 font-weight-bold text-gray-800"><%=datosBasureros[i].volumenPorDia%> m³</div>
+                      </div>
+                      <div class="col mr-2">
+                        <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">En la semana</div>
+                        <div class="h5 mb-0 font-weight-bold text-gray-800"><%=datosBasureros[i].volumenPorSemana%> m³</div>
+                      </div>
+                      <div class="col mr-2">
+                        <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">En el mes</div>
+                        <div class="h5 mb-0 font-weight-bold text-gray-800"><%=datosBasureros[i].volumenPorMes%> m³</div>
+                      </div>
+                      <div class="col-auto">
+                        <i class="fas fa-cubes fa-2x text-gray-800"></i>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+            </div>
+          </div>
+          <br />
+          <!-- Fin de fila de basurero -->
+          <% } %>
+
+        </div>
+        <!-- /.container-fluid -->
+
+      </div>
+      <!-- End of Main Content -->
+
+    </div>
+    <!-- End of Content Wrapper -->
+
+  </div>
+  <!-- End of Page Wrapper -->
+
+  <!-- Bootstrap core JavaScript-->
+  <script src="vendor/jquery/jquery.min.js"></script>
+  <script src="vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
+
+  <!-- Core plugin JavaScript-->
+  <script src="vendor/jquery-easing/jquery.easing.min.js"></script>
+
+  <!-- Custom scripts for all pages-->
+  <script src="js/sb-admin-2.min.js"></script>
+
+  <!-- Page level plugins -->
+  <script src="vendor/chart.js/Chart.min.js"></script>
+
+  <!-- Page level custom scripts -->
+  <script src="js/demo/chart-area-demo.js"></script>
+  <script src="js/demo/chart-pie-demo.js"></script>
+
+</body>
+
+</html>

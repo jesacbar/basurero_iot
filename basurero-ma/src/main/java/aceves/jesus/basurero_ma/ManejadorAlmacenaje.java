@@ -14,6 +14,7 @@ import aceves.jesus.basurero_utilidades.Utilidades;
 
 import static com.mongodb.client.model.Filters.eq;
 
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
@@ -59,13 +60,14 @@ public class ManejadorAlmacenaje {
 		// Que hacer si no se ha ingresado un cambio de llenado antes.
 		if (cambioLlenadoActual == null) {
 			System.out.println("PRIMERA INSERCIÓN DE CAMBIO DE LLENADO Y ESTADO");
+			System.out.println(basurero);
 			CambioLlenado cambioLlenadoNuevo = new CambioLlenado(
 					lectura.getIdBasurero(),
 					lectura.getFechahora(), 
 					0,
 					porcentajeLlenadoNuevo,
 					0,
-					porcentajeLlenadoNuevo * basurero.getVolumen(),
+					(porcentajeLlenadoNuevo / 100) * basurero.getVolumen(),
 					Utilidades.calcularEstado(basurero, lectura)
 					);
 			insertarCambioLlenado(cambioLlenadoNuevo);
@@ -80,11 +82,10 @@ public class ManejadorAlmacenaje {
 					cambioLlenadoActual.getLlenadoActual(),
 					porcentajeLlenadoNuevo,
 					cambioLlenadoActual.getVolumenActual(),
-					porcentajeLlenadoNuevo * basurero.getVolumen(),
+					(porcentajeLlenadoNuevo / 100) * basurero.getVolumen(),
 					Utilidades.calcularEstado(basurero, lectura)
 					);
 			insertarCambioLlenado(cambioLlenadoNuevo);
-			
 			// Ver si ha ocurrido un cambio de estados
 			if (cambioLlenadoNuevo.getEstado() != cambioLlenadoActual.getEstado()) {
 				System.out.println("SE DETECTÓ CAMBIO DE ESTADO");
@@ -105,7 +106,7 @@ public class ManejadorAlmacenaje {
 				.append("llenadoAnterior", cambioLlenado.getLlenadoAnterior())
 				.append("llenadoActual", cambioLlenado.getLlenadoActual())
 				.append("volumenAnterior", cambioLlenado.getVolumenAnterior())
-				.append("volumenActual", cambioLlenado.getVolumenAnterior())
+				.append("volumenActual", cambioLlenado.getVolumenActual())
 				.append("estado", cambioLlenado.getEstado());
 
 		collection.insertOne(document);
@@ -125,7 +126,7 @@ public class ManejadorAlmacenaje {
 				.append("llenadoAnterior", cambioEstado.getLlenadoAnterior())
 				.append("llenadoActual", cambioEstado.getLlenadoActual())
 				.append("volumenAnterior", cambioEstado.getVolumenAnterior())
-				.append("volumenActual", cambioEstado.getVolumenAnterior())
+				.append("volumenActual", cambioEstado.getVolumenActual())
 				.append("estado", cambioEstado.getEstado());
 
 		collection.insertOne(document);
@@ -148,6 +149,19 @@ public class ManejadorAlmacenaje {
 		collection.insertOne(document);
 
 		System.out.println("MANEJADOR ALMACENAJE: Inserción de basurero exitosa.");
+		
+		// Se agregan cambios de llenado y estado iniciales
+		CambioLlenado cambioLlenadoNuevo = new CambioLlenado(
+				basurero.getId(),
+				Date.from(Instant.now()),
+				0.0,
+				0.0,
+				0.0,
+				0.0,
+				"VACIO"
+				);
+		insertarCambioLlenado(cambioLlenadoNuevo);
+		insertarCambioEstado(cambioLlenadoNuevo);
 	}
 
 	/**

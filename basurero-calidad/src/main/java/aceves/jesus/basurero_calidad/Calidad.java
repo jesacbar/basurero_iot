@@ -37,12 +37,14 @@ public class Calidad implements MqttCallback{
 			client.subscribe("basurero-iot");
 			
 			// Se registran los basureros de prueba si no estaban ya registrados
+			// Nota: Las alturas de los basureros deben de registrarse en centimetros y
+			// y los volúmenes en centimetros cúbicos.
 			if (ma.obtenerBasurero(1) == null) {
-				Basurero basurero1 = new Basurero(1, 100, 1);
+				Basurero basurero1 = new Basurero(1, 100, 100);
 				ma.insertarBasurero(basurero1);
-				Basurero basurero2 = new Basurero(2, 100, 1);
+				Basurero basurero2 = new Basurero(2, 100, 100);
 				ma.insertarBasurero(basurero2);
-				Basurero basurero3 = new Basurero(3, 100, 1);
+				Basurero basurero3 = new Basurero(3, 100, 100);
 				ma.insertarBasurero(basurero3);
 				System.out.println("< Se registraron los basureros de prueba >");
 			}			

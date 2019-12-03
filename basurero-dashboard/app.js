@@ -29,3 +29,41 @@ app.use('/', indexRoutes);
 app.listen(app.get('port'), ()=>{
     console.log(`Servidor escuchando en ${app.get('port')}` );
 });
+
+const http = require('http');
+const WebSocketServer = require('websocket').server;
+
+const server = http.createServer();
+server.listen(7000);
+
+const wsServer = new WebSocketServer({
+    httpServer: server
+});
+
+wsServer.on('request', function(request) {
+    const connection = request.accept(null, request.origin);
+
+    connection.on('message', function(message) {
+        console.log('Mensaje recibido: ', message.utf8Data);
+        client.publish('basurero-iot-configuracion', message.utf8Data)
+    });
+    connection.on('close', function(reasonCode, description) {
+        console.log('Se ha desconectado el cliente.')
+    })
+})
+
+var mqtt = require('mqtt')
+var client  = mqtt.connect('mqtt://test.mosquitto.org')
+ 
+client.on('connect', function () {
+  client.subscribe('basurero-iot-notificaciones', function (err) {
+    if (!err) {
+      console.log("Suscrito a servidor MQTT.");
+    };
+  });
+});
+ 
+client.on('message', function (topic, message) {
+  console.log(message.toString());
+  wsServer.broadcastUTF(message.toString());
+});

@@ -8,11 +8,26 @@ import javax.mail.Transport;
 import javax.mail.internet.InternetAddress;
 import javax.mail.internet.MimeMessage;
 
+import org.eclipse.paho.client.mqttv3.IMqttDeliveryToken;
+import org.eclipse.paho.client.mqttv3.MqttCallback;
+import org.eclipse.paho.client.mqttv3.MqttClient;
+import org.eclipse.paho.client.mqttv3.MqttException;
+import org.eclipse.paho.client.mqttv3.MqttMessage;
+import org.json.simple.JSONObject;
+import org.json.simple.parser.JSONParser;
+
 import aceves.jesus.basurero_entidades.Basurero;
 import aceves.jesus.basurero_entidades.Lectura;
 import aceves.jesus.basurero_utilidades.Utilidades;
 
+import java.io.File;
+import java.io.FileReader;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.text.DecimalFormat;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Properties;
@@ -22,26 +37,32 @@ import java.util.Properties;
  * Aceves Contiene métodos que sirven para verificar si es necesario mandar una
  * o varias notificaciones tras recibir una lectura de un bote de basura.
  */
-public class ManejadorNotificaciones extends Thread {
+public class ManejadorNotificaciones extends Thread implements MqttCallback {
 
 	private final String USERNAME = "basurer0i0t@gmail.com";
 	private final String PASSWORD = "4Gf#I1P0VK#X";
-	private final String TO = "jesusgace@gmail.com";
+	private String TO = "jesusgace@gmail.com"; // Valor por defecto
 	private final String SUBJECT = "Bote de basura: Alerta de estado";
-
+	
 	// Si este boolean está en false no se mandaran los correos
 	// (usado para pruebas).
-	private final Boolean MANDARCORREOS = false;
+	private final Boolean MANDARCORREOS = true;
+	
+	private MqttClient client;
 	
 	private HashMap<Basurero, Lectura> ultimasLecturas = new HashMap<Basurero, Lectura>();
 	private HashMap<Basurero, String> estadosConexion = new HashMap<Basurero, String>();
 	private HashMap<Basurero, String> estadosLlenado = new HashMap<Basurero, String>();
 	
-	
 	public ManejadorNotificaciones(HashMap<Basurero, Lectura> ultimasLecturas) {
 		super();
+		
 		this.ultimasLecturas = ultimasLecturas;
 		
+		JSONObject jsonConfiguracion = leerConfiguracion();
+
+		TO = (String)jsonConfiguracion.get("correoDestinatario");
+
 		for (Basurero basurero : ultimasLecturas.keySet()) {
 			
 			// Llenado del mapa de estados de conexión de los basureros.
@@ -58,8 +79,30 @@ public class ManejadorNotificaciones extends Thread {
 			estadosLlenado.put(basurero, Utilidades.calcularEstado(basurero, ultimasLecturas.get(basurero)));
 
 		}
+		
+		try {
+			client = new MqttClient("tcp://test.mosquitto.org:1883", MqttClient.generateClientId());
+			client.setCallback(this);
+			client.connect();
+			System.out.println("--- Se estableció la conexión con el broker MQTT (Notificaciones) ---");
+			client.subscribe("basurero-iot-configuracion");
+		} catch (MqttException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 	}
 
+	public void messageArrived(String topic, MqttMessage message) throws Exception {
+		System.out.println("SE RECIBIÓ LA SIGUIENTE CONFIGURACIÓN: " + message.toString());
+		String[] partesMensaje = message.toString().split(",");
+		JSONObject configuracion = leerConfiguracion();
+		configuracion.put("correoDestinatario", partesMensaje[1]);
+		
+		Files.write(Paths.get("../config.json"), configuracion.toJSONString().getBytes());
+		
+		TO = partesMensaje[1];
+	}
+	
 	/**
 	 * Este hilo revisa cada minuto si ha pasado un minuto o más desde que se
 	 * recibió la última lectura de cada basurero, y si sí, registra el estado de
@@ -79,9 +122,9 @@ public class ManejadorNotificaciones extends Thread {
 				Lectura ultimaLectura = ultimasLecturas.get(basurero);
 				if (estadosConexion.get(basurero).equalsIgnoreCase("CONECTADO") && 
 						ahora.getTime() - ultimaLectura.getFechahora().getTime() >= 1 * SEGUNDOS * 1000) {
-					mandarCorreo("El basurero #" + basurero.getId() + " se ha desconectado.");
 					estadosConexion.put(basurero, "DESCONECTADO");
 					System.out.println("NOTIFICACIÓN: El basurero #" + basurero.getId() + " se ha desconectado.");
+					notificar("El basurero #" + basurero.getId() + " se ha desconectado.");
 				}
 			}
 			System.out.println("< Revisión de basureros desconectados terminada >");
@@ -118,12 +161,20 @@ public class ManejadorNotificaciones extends Thread {
 		DecimalFormat df = new DecimalFormat("#0.00");
 		String porcentajeForm = df.format(porcentajeLlenado);
 
+		// Si se detectó un cambio de porcentajes de llenado, mandar un mensaje
+		// al servidor MQTT.
+		if (ultimasLecturas.get(basureroLectura).getAltura() != lectura.getAltura()) {
+			mandarNotificacionMqtt("llenado," + basureroLectura.getId() + "," + Utilidades.calcularPorcentajeLlenado(basureroLectura, lectura));
+			System.out.println("llenado," + basureroLectura.getId() + ","+ Utilidades.calcularPorcentajeLlenado(basureroLectura, lectura));
+		}
+		
 		// Actualizar ultima lectura de ese bote de basura en el mapa de ultimas lecturas.
 		ultimasLecturas.put(basureroLectura, lectura);
 		
 		if (estadosConexion.get(basureroLectura) == null || estadosConexion.get(basureroLectura).equalsIgnoreCase("DESCONECTADO")) {
 			estadosConexion.put(basureroLectura, "CONECTADO");
-			System.out.println("NOTIFICACIÓN: El basurero #" + basureroLectura.getId() + " se ha conectado.");
+			System.out.println("notificacion, " + "" + "El basurero #" + basureroLectura.getId() + " se ha conectado.");
+			mandarNotificacionMqtt("notificacion,El basurero #" + basureroLectura.getId() + " se ha conectado.");
 		}
 		
 		String estadoActual = estadosLlenado.get(basureroLectura);
@@ -134,15 +185,15 @@ public class ManejadorNotificaciones extends Thread {
 		}
 		// Cuando esté aprox. "lleno"
 		else if (!estadoActual.equalsIgnoreCase("LLENO") && estadoNuevo.equals("LLENO")) {
-			mandarCorreo("El basurero #" + lectura.getIdBasurero() + " está " + porcentajeForm + "% lleno.");
+			notificar("El basurero #" + lectura.getIdBasurero() + " está " + porcentajeForm + "% lleno.");
 		}
 		// Cuando esté aprox. tres cuartos
 		else if (!estadoActual.equalsIgnoreCase("CASILLENO") && estadoNuevo.equals("CASILLENO")) {
-			mandarCorreo("El basurero #" + lectura.getIdBasurero() + " está " + porcentajeForm + "% lleno.");
+			notificar("El basurero #" + lectura.getIdBasurero() + " está " + porcentajeForm + "% lleno.");
 		}
 		// Cuando esté aprox. a la mitad
 		else if (!estadoActual.equalsIgnoreCase("MEDIO") && estadoNuevo.equals("MEDIO")) {
-			mandarCorreo("El basurero #" + lectura.getIdBasurero() + " está " + porcentajeForm + "% lleno.");
+			notificar("El basurero #" + lectura.getIdBasurero() + " está " + porcentajeForm + "% lleno.");
 		}
 		// Cuando esté aprox. un cuarto lleno
 		else if (!estadoActual.equalsIgnoreCase("CASIVACIO") && estadoNuevo.equals("CASIVACIO")) {
@@ -152,7 +203,7 @@ public class ManejadorNotificaciones extends Thread {
 		else if (!estadoActual.equalsIgnoreCase("VACIO") && estadoNuevo.equals("VACIO")) {
 			
 		}
-		System.out.println("NOTIFICACIÓN: El basurero #" + lectura.getIdBasurero() + " está " + porcentajeForm + "% lleno.");
+		System.out.println("El basurero #" + lectura.getIdBasurero() + " está " + porcentajeForm + "% lleno.");
 		estadosLlenado.put(basureroLectura, estadoNuevo);
 	}
 
@@ -195,4 +246,76 @@ public class ManejadorNotificaciones extends Thread {
 		}
 		return false;
 	}
+	
+	/**
+	 * Manda una notificación al servidor MQTT.
+	 * @param mensaje Cuerpo de la notificación.
+	 * @return Verdadero si se pudo mandar el mensaje, falso en caso contrario.
+	 */
+	public boolean mandarNotificacionMqtt(String mensaje) {		
+		DateTimeFormatter dtf = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm:ss");  
+		LocalDateTime now = LocalDateTime.now();  
+		String fechahoraForm = dtf.format(now); 
+
+		String mensajeConFecha = fechahoraForm + "," + mensaje;
+		
+		MqttMessage message = new MqttMessage();
+	    message.setPayload(mensajeConFecha.getBytes());
+
+		try {
+			client.publish("basurero-iot-notificaciones", message);
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			return false;
+		}
+		
+		System.out.println("---------------NOTIFICACION MANDADA---------------");
+		return true;
+	}
+	
+	public void notificar(String mensaje) {
+		mandarCorreo(mensaje);
+		mandarNotificacionMqtt("notificacion,"+mensaje);
+	}
+	
+	public JSONObject leerConfiguracion() {
+		// Ver si existe el archivo de configuración, y si no es así
+		// crearlo.
+		File temp = new File("../config.json");
+		if (!temp.exists()) {
+			System.out.println("No se encontró el JSON de configuración");
+			JSONObject jsonObject = new JSONObject();
+			jsonObject.put("correoDestinatario", "correo@email.com");
+			try {
+				Files.write(Paths.get("../config.json"), jsonObject.toJSONString().getBytes());
+				System.out.println(jsonObject.toJSONString());
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		}
+		
+		FileReader reader;
+		try {
+			reader = new FileReader("../config.json");
+			JSONParser jsonParser = new JSONParser();
+			return (JSONObject) jsonParser.parse(reader);
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+			
+		return null;
+	}
+
+	public void connectionLost(Throwable cause) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	public void deliveryComplete(IMqttDeliveryToken token) {
+		// TODO Auto-generated method stub
+		
+	};
 }

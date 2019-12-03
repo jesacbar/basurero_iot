@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const moment = require('moment')
+const fs = require('fs');
 
 const Basurero = require('../models/basurero');
 const Lectura = require('../models/lectura');
@@ -149,9 +150,18 @@ router.get('/', async (req, res) => {
         basureroMasUsado: basureroMasUsado
     };
 
+    let rawdata = fs.readFileSync('../config.json');
+    let configuracionData = JSON.parse(rawdata);
+    console.log(configuracionData);
+
+    var configuracion = {
+        correoDestinatario: configuracionData.correoDestinatario
+    };
+
     res.render('index', {
         datosBasureros,
-        datosGenerales
+        datosGenerales,
+        configuracion
     });
 });
 

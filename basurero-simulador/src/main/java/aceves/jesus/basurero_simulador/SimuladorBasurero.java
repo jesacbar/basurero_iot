@@ -1,7 +1,6 @@
 package aceves.jesus.basurero_simulador;
 
 import java.text.DecimalFormat;
-import java.time.Instant;
 import java.util.Scanner;
 
 import org.eclipse.paho.client.mqttv3.MqttClient;
@@ -30,10 +29,8 @@ public class SimuladorBasurero {
 				double altura = sc.nextDouble();
 				DecimalFormat df = new DecimalFormat("#.00");
 			    String alturaForm = df.format(altura);
-				
-			    Instant i = Instant.now();
 			    
-			    String mensaje = idBasurero + "," + i + "," + alturaForm;
+			    String mensaje = idBasurero + "," + alturaForm;
 			    
 			    MqttMessage message = new MqttMessage();
 			    message.setPayload(mensaje.getBytes());

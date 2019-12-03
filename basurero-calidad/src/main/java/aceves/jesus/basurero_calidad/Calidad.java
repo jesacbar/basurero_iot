@@ -1,6 +1,7 @@
 package aceves.jesus.basurero_calidad;
 
 import java.time.Instant;
+import java.util.Arrays;
 import java.util.Date;
 
 import org.eclipse.paho.client.mqttv3.IMqttDeliveryToken;
@@ -22,12 +23,14 @@ import aceves.jesus.basurero_mn.ManejadorNotificaciones;
  * de notificaciones para ver si es necesario mandar notificaciones.
  */
 public class Calidad implements MqttCallback{
-	
+		
 	private static ManejadorAlmacenaje ma = new ManejadorAlmacenaje();
-	private static ManejadorNotificaciones mn = new ManejadorNotificaciones(ma.obtenerUltimasLecturas());
+	private static ManejadorNotificaciones mn;
 	
 	public static void main(String[] args) {
 		MqttClient client;
+		
+		mn = new ManejadorNotificaciones(ma.obtenerUltimasLecturas());
 		
 		try {
 			client = new MqttClient("tcp://test.mosquitto.org:1883", MqttClient.generateClientId());
@@ -68,9 +71,10 @@ public class Calidad implements MqttCallback{
 	 */
 	public void messageArrived(String topic, MqttMessage message) throws Exception {
 		String[] partesLectura = message.toString().split(",");
+		System.out.println(Arrays.toString(partesLectura));
 		Lectura lectura = new Lectura(Integer.parseInt(partesLectura[0]), 
-				Date.from(Instant.parse(partesLectura[1])), 
-				Double.parseDouble(partesLectura[2]));
+				Date.from(Instant.now()), 
+				Double.parseDouble(partesLectura[1]));
 		System.out.println("---------------LECTURA RECIBIDA---------------");
 		if (revisarCalidad(lectura)) {
 			System.out.println("CALIDAD: Se pasaron las pruebas de calidad.");

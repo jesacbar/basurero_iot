@@ -16,6 +16,7 @@
     "mongoose": "^5.7.13",
     "morgan": "^1.9.1",
     "mqtt": "^3.0.0",
+    "regression": "^2.0.1",
     "websocket": "^1.0.30"
   }
 }

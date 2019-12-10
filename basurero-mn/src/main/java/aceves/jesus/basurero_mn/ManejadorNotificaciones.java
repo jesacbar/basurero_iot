@@ -96,7 +96,7 @@ public class ManejadorNotificaciones extends Thread implements MqttCallback {
 		System.out.println("SE RECIBIÓ LA SIGUIENTE CONFIGURACIÓN: " + message.toString());
 		String[] partesMensaje = message.toString().split(",");
 		JSONObject configuracion = leerConfiguracion();
-		configuracion.put("correoDestinatario", partesMensaje[1]);
+		configuracion.put(partesMensaje[0], partesMensaje[1]);
 		
 		Files.write(Paths.get("../config.json"), configuracion.toJSONString().getBytes());
 		

@@ -56,7 +56,17 @@
                   <h4 class="small font-weight-bold">Basurero #<%=datosBasureros[i].idBasurero%><span
                       class="float-right"><%=datosBasureros[i].llenadoActual%>%</span></h4>
                   <div class="progress mb-4">
-                    <div id="llenadoGrafica<%=datosBasureros[i].idBasurero%>" class="progress-bar" role="progressbar"
+                    <div id="llenadoGrafica<%=datosBasureros[i].idBasurero%>"
+                      <% if(parseFloat(datosBasureros[i].llenadoActual) > 90) { %>
+                        class="progress-bar bg-danger"
+                      <% } else if(parseFloat(datosBasureros[i].llenadoActual) >= 60) { %>
+                        class="progress-bar bg-warning"
+                      <% } else if(parseFloat(datosBasureros[i].llenadoActual) > 40) { %>
+                        class="progress-bar bg-info"
+                      <% } else { %>
+                        class="progress-bar"
+                      <% } %>
+                      role="progressbar"
                       style="width: <%=datosBasureros[i].llenadoActual%>%" aria-valuenow="20" aria-valuemin="0"
                       aria-valuemax="100"></div>
                   </div>
@@ -121,21 +131,21 @@
               <div class="card border-left-primary shadow h-100 py-2">
                 <div class="card-body">
                   <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">Total del volumen de basura que
-                    ha sido retirada</div>
+                    ha sido retirada desde</div>
                   <div class="row no-gutters align-items-center">
                     <div class="col mr-2">
-                      <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">En el día
+                      <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">hace 24 horas
                       </div>
                       <div class="h5 mb-0 font-weight-bold text-gray-800"><%=datosGenerales.volumenPorDiaTotal%> m³
                       </div>
                     </div>
                     <div class="col mr-2">
-                      <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">En la semana</div>
+                      <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">hace una semana</div>
                       <div class="h5 mb-0 font-weight-bold text-gray-800"><%=datosGenerales.volumenPorSemanaTotal%> m³
                       </div>
                     </div>
                     <div class="col mr-2">
-                      <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">En el mes</div>
+                      <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">hace un mes</div>
                       <div class="h5 mb-0 font-weight-bold text-gray-800"><%=datosGenerales.volumenPorMesTotal%> m³
                       </div>
                     </div>
@@ -156,7 +166,7 @@
                 <div class="card-header py-3">
                   <h6 class="m-0 font-weight-bold text-primary">Últimas notificaciones</h6>
                 </div>
-                <div id="campoNotificaciones" style="height: 200px;" class="card-body overflow-auto w-100 p-3">
+                <div id="campoNotificaciones" style="height: 300px;" class="card-body overflow-auto w-100 p-3">
                 </div>
               </div>
             </div>
@@ -166,7 +176,7 @@
                 <div class="card-header py-3">
                   <h6 class="m-0 font-weight-bold text-primary">Opciones de notificaciones</h6>
                 </div>
-                <div class="card-body" style="height: 200px;">
+                <div class="card-body" style="height: 300px;">
 
                   <div class="form-group">
                     <label for="correoInput">Correo electrónico</label>
@@ -175,9 +185,14 @@
                     <small id="emailHelp" class="form-text text-muted">Esta es la dirección a la que se
                       envían los correos electrónicos de notificación.</small>
                   </div>
+                  <div class="form-group">
+                    <label for="correoInput">Notificar desde %</label>
+                    <input type="number" step=".01" class="form-control" id="porcentajeInput"
+                      value="<%-configuracion.porcentaje%>">
+                  </div>
 
                   <button id="botonCambiarCorreo" type="button" class="btn btn-block btn-primary">
-                    Cambiar correo electrónico
+                    Actualizar
                   </button>
                 </div>
               </div>
@@ -193,7 +208,7 @@
               </div>
             </div>
             <div class="row">
-              <div class="col-xl-12 col-md-6 mb-4">
+              <div class="col-xl-9 col-md-6 mb-4">
                 <div class="card shadow h-100 py-2">
                   <div class="card-body">
                     <div class="row no-gutters align-items-center">
@@ -217,6 +232,17 @@
                       </div>
                       <div class="col-auto">
                         <i class="fas fa-percentage fa-2x text-gray-800"></i>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div class="col-xl-3 col-md-6 mb-4">
+                <div class="card shadow h-100 py-2">
+                  <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                      <div class="col mr-2">
+                        <button class="btn btn-primary btn-lg btn-block" onclick="location.href = 'localhost:5000/predecir';">Predecir llenado</button>
                       </div>
                     </div>
                   </div>
@@ -294,21 +320,21 @@
                 <div class="card shadow h-100 py-2">
                   <div class="card-body">
                     <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">Volumen de basura que ha sido
-                      retirada</div>
+                      retirada desde</div>
                     <div class="row no-gutters align-items-center">
                       <div class="col mr-2">
-                        <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">En el día
+                        <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">hace un día
                         </div>
                         <div class="h5 mb-0 font-weight-bold text-gray-800"><%=datosBasureros[i].volumenPorDia%> m³
                         </div>
                       </div>
                       <div class="col mr-2">
-                        <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">En la semana</div>
+                        <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">hace una semana</div>
                         <div class="h5 mb-0 font-weight-bold text-gray-800"><%=datosBasureros[i].volumenPorSemana%> m³
                         </div>
                       </div>
                       <div class="col mr-2">
-                        <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">En el mes</div>
+                        <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">hace un mes</div>
                         <div class="h5 mb-0 font-weight-bold text-gray-800"><%=datosBasureros[i].volumenPorMes%> m³
                         </div>
                       </div>
@@ -380,13 +406,29 @@
       console.log("Se detectó cambio en los llenados")
       console.log("Elemento a editar: " + "llenadoGrafica" + datos[2])
       document.getElementById("llenadoGrafica" + datos[2]).style = "width: " + datos[3] + "%";
+      if(parseFloat(datos[3]) > 0) {
+        document.getElementById("llenadoGrafica" + datos[2]).className = "progress-bar"
+      }
+      if(parseFloat(datos[3]) > 40) {
+        document.getElementById("llenadoGrafica" + datos[2]).className = "progress-bar bg-info"
+      }
+      if(parseFloat(datos[3]) >= 60) {
+        document.getElementById("llenadoGrafica" + datos[2]).className = "progress-bar bg-warning"
+      }
+      if(parseFloat(datos[3]) > 90) {
+        document.getElementById("llenadoGrafica" + datos[2]).className = "progress-bar bg-danger"
+      }
     };
   }
 
   function cambiarCorreo() {
       var correoNuevo = document.getElementById("correoInput").value;
-      ws.send("correoNuevo," + correoNuevo);
-      console.log("correoNuevo," + correoNuevo)
+      ws.send("correoDestinatario," + correoNuevo);
+      var porcentajeNuevo = document.getElementById("porcentajeInput").value;
+      var patt = /^\d\d\d?$/;
+      if (patt.test(porcentajeNuevo)) {
+        ws.send("porcentaje," + porcentajeNuevo)
+      };
   };
 
   document.getElementById("botonCambiarCorreo").addEventListener("click", cambiarCorreo);

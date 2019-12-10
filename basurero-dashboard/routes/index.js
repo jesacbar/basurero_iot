@@ -8,6 +8,12 @@ const Lectura = require('../models/lectura');
 const CambioLlenado = require('../models/cambioLlenado');
 const CambioEstado = require('../models/cambioEstado')
 
+router.get('/predecir', async (req, res) => {
+    //var id = req.params.id;
+    
+    res.render('prediccion');
+});
+
 router.get('/', async (req, res) => {
     var basureros = await Basurero.find().sort({ id: 1 });
 
@@ -155,7 +161,8 @@ router.get('/', async (req, res) => {
     console.log(configuracionData);
 
     var configuracion = {
-        correoDestinatario: configuracionData.correoDestinatario
+        correoDestinatario: configuracionData.correoDestinatario,
+        porcentaje: configuracionData.porcentaje
     };
 
     res.render('index', {

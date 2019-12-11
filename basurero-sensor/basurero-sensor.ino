@@ -5,8 +5,8 @@
 #define PIN_TRIGGER 2
 #define PIN_ECHO 5
 
-const char* ssid = "ACEVESS";
-const char* password = "54j^Fi%&Azuf";
+const char* ssid = "KWifi";
+const char* password = "wumo4845";
 const char* mqttServer = "test.mosquitto.org";
 const int mqttPort = 1883;
 

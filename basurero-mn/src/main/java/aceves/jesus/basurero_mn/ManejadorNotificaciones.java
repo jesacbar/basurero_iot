@@ -44,6 +44,8 @@ public class ManejadorNotificaciones extends Thread implements MqttCallback {
 	private String TO = "jesusgace@gmail.com"; // Valor por defecto
 	private final String SUBJECT = "Bote de basura: Alerta de estado";
 	
+	private String porcNotificacion = null;
+	
 	// Si este boolean está en false no se mandaran los correos
 	// (usado para pruebas).
 	private final Boolean MANDARCORREOS = true;
@@ -62,6 +64,7 @@ public class ManejadorNotificaciones extends Thread implements MqttCallback {
 		JSONObject jsonConfiguracion = leerConfiguracion();
 
 		TO = (String)jsonConfiguracion.get("correoDestinatario");
+		porcNotificacion = (String)jsonConfiguracion.get("porcentaje");
 
 		for (Basurero basurero : ultimasLecturas.keySet()) {
 			
@@ -100,7 +103,11 @@ public class ManejadorNotificaciones extends Thread implements MqttCallback {
 		
 		Files.write(Paths.get("../config.json"), configuracion.toJSONString().getBytes());
 		
-		TO = partesMensaje[1];
+		if (partesMensaje[0].equalsIgnoreCase("porcentaje")) {
+			porcNotificacion = partesMensaje[1];
+		} else {
+			TO = partesMensaje[1];
+		}
 	}
 	
 	/**
@@ -179,6 +186,11 @@ public class ManejadorNotificaciones extends Thread implements MqttCallback {
 		
 		String estadoActual = estadosLlenado.get(basureroLectura);
 		String estadoNuevo = Utilidades.calcularEstado(basureroLectura, lectura);
+		
+		if (Utilidades.calcularPorcentajeLlenado(basureroLectura, lectura) >= Double.parseDouble(porcNotificacion)) {
+			notificar("N. personalizada: El basurero #" + lectura.getIdBasurero() + " está " + porcentajeForm + "% lleno.");
+		}
+		
 		// Cuando se reciba la primer lectura de un basurero
 		if (estadoActual == null) {
 
@@ -287,6 +299,7 @@ public class ManejadorNotificaciones extends Thread implements MqttCallback {
 			System.out.println("No se encontró el JSON de configuración");
 			JSONObject jsonObject = new JSONObject();
 			jsonObject.put("correoDestinatario", "correo@email.com");
+			jsonObject.put("porcentaje", "100");
 			try {
 				Files.write(Paths.get("../config.json"), jsonObject.toJSONString().getBytes());
 				System.out.println(jsonObject.toJSONString());
